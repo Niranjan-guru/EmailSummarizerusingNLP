@@ -8,6 +8,9 @@ from transformers import pipeline
 from flask_sqlalchemy import SQLAlchemy
 import os
 import base64
+import mimetypes
+from io import BytesIO
+from email import message_from_bytes
 
 # Load environment variables
 app = Flask(__name__)
@@ -17,7 +20,7 @@ CORS(app)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'default_secret_key')
 
 # Use environment variable for client secret file
-CLIENT_SECRET_FILE = os.getenv('GOOGLE_CLIENT_SECRET_FILE', r'C:\Users\LENOVO\OneDrive\Documents\Email-Summarizer-Extension\client_secret_817174760885-qkhtkn8ib3uhobfj5ipf34pi60k8pikv.apps.googleusercontent.com.json')
+CLIENT_SECRET_FILE = os.getenv('GOOGLE_CLIENT_SECRET_FILE', r'your client_secret.... .json file (path)')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///credentials.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -155,11 +158,77 @@ def summarize_emails():
         else:
             summaries.append({"subject": subject, "summary": "(No summary available)"})
 
+        # Extract attachments if present
+        attachments = extract_attachments(payload)
+        if attachments:
+            summaries[-1]["attachments"] = attachments
+
     # Render the email summaries in the HTML template
     return render_template('summarized_emails.html', summaries=summaries)
+
+def decode_body(payload):
+    # Check if body is base64 encoded
+    body_data = payload.get('body', {}).get('data', '')
+    if body_data:
+        try:
+            decoded_body = base64.urlsafe_b64decode(body_data.encode('UTF-8')).decode('UTF-8', errors='ignore')
+            return decoded_body
+        except Exception as e:
+            return f"(Error decoding body: {str(e)})"
+    
+    # Check if the body contains parts like MIME Text (HTML or plain text)
+    parts = payload.get('parts', [])
+    for part in parts:
+        filename = part.get('filename', '')
+        mime_type = part.get('mimeType', '')
+        part_body = part.get('body', {}).get('data', '')
+        
+        if part_body:
+            try:
+                decoded_part = base64.urlsafe_b64decode(part_body.encode('UTF-8')).decode('UTF-8', errors='ignore')
+                if mime_type == 'text/html':
+                    return decoded_part  # Return the HTML body content
+                elif mime_type == 'text/plain':
+                    return decoded_part  # Return the plain text version of the body
+            except Exception as e:
+                return f"(Error decoding part: {str(e)})"
+    
+    # If nothing is found, return placeholder
+    return "(No content available)"
+
 @app.route('/')
 def home():
     return "Welcome to the Gmail Summarizer! <a href='/login'>Login with Google</a>"
+
+# Function to extract attachments from email
+def extract_attachments(payload):
+    attachments = []
+    for part in payload.get('parts', []):
+        filename = part.get('filename')
+        mime_type = part.get('mimeType')
+        body = part.get('body', {})
+        attachment_data = body.get('data')
+        
+        if attachment_data:
+            # Decode base64-encoded attachment
+            data = base64.urlsafe_b64decode(attachment_data.encode('UTF-8'))
+            attachments.append({
+                'filename': filename,
+                'data': data,
+                'mime_type': mime_type
+            })
+        elif part.get('body', {}).get('attachmentId'):
+            # If attachment is too large, we fetch it from Gmail using the attachmentId
+            attachment = service.users().messages().attachments().get(
+                userId='me', messageId=payload['headers'][0]['value'], id=part['body']['attachmentId']
+            ).execute()
+            data = base64.urlsafe_b64decode(attachment['data'].encode('UTF-8'))
+            attachments.append({
+                'filename': filename,
+                'data': data,
+                'mime_type': mime_type
+            })
+    return attachments
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000, ssl_context=('cert.pem', 'key.pem'))
