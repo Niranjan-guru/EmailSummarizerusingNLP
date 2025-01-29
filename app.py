@@ -7,6 +7,8 @@ from googleapiclient.discovery import build
 from transformers import pipeline
 from flask_sqlalchemy import SQLAlchemy
 import os
+# import pyotp
+# from flask_mail import Mail, Message
 import base64
 import mimetypes
 from io import BytesIO
@@ -19,8 +21,17 @@ CORS(app)
 # Set secret key securely
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'default_secret_key')
 
+#Authentication Layer -1
+# app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+# app.config['MAIL_PORT'] = 587
+# app.config['MAIL_USE_TLS'] = True
+# app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USER', 'your-email@gmail.com')
+# app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASS', 'your-email-password')
+
+# mail = Mail(app)
+
 # Use environment variable for client secret file
-CLIENT_SECRET_FILE = os.getenv('GOOGLE_CLIENT_SECRET_FILE', r'your client_secret.... .json file (path)')
+CLIENT_SECRET_FILE = os.getenv('GOOGLE_CLIENT_SECRET_FILE', r'C:\Users\LENOVO\OneDrive\Documents\Email-Summarizer-Extension\client_secret_817174760885-qkhtkn8ib3uhobfj5ipf34pi60k8pikv.apps.googleusercontent.com.json')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///credentials.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -44,6 +55,44 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 summarizer = pipeline("summarization")
 
 # Step 1: OAuth Login Route
+
+# Added step
+# @app.route('/setup_otp')
+# def setup_otp():
+#     email = session.get('email')  # Use the logged-in user's email
+#     if not email:
+#         return "User email not found in session", 400
+
+#     secret = pyotp.random_base32()
+#     session['otp_secret'] = secret
+
+#     totp = pyotp.TOTP(secret)
+#     otp = totp.now()
+
+#     # Send OTP via email
+#     msg = Message("Your One-Time Password (OTP)",
+#                   sender=app.config['MAIL_USERNAME'],
+#                   recipients=[email])
+#     msg.body = f"Your OTP for login is: {otp}"
+#     mail.send(msg)
+
+#     return render_template('enter_otp.html')
+
+# @app.route('/verify_otp', methods=['POST'])
+# def verify_otp():
+#     user_otp = request.form['otp']
+#     secret = session.get('otp_secret')
+
+#     if not secret:
+#         return "OTP expired or not found", 400
+
+#     totp = pyotp.TOTP(secret)
+#     if totp.verify(user_otp):
+#         session['otp_verified'] = True
+#         return redirect(url_for('summarize_emails'))
+#     else:
+#         return "Invalid OTP, try again", 400
+
 @app.route('/login')
 def login():
     flow = Flow.from_client_secrets_file(
@@ -71,27 +120,55 @@ def callback():
         redirect_uri=url_for('callback', _external=True),
         state=state
     )
-    flow.fetch_token(authorization_response=request.url)
+    # flow.fetch_token(authorization_response=request.url)
 
-    credentials = flow.credentials
+    # credentials = flow.credentials
 
-    # Save the new credentials to the database
-    existing_creds = OAuthCredentials.query.first()
-    if existing_creds:
-        db.session.delete(existing_creds) 
+    # # from googleapiclient.discovery import build
+    # # service = build('gmail', 'v1', credentials=credentials)
+    # # user_info = service.users().getProfile(userId='me').execute()
+    # # email = user_info['emailAddress']
+    # # session['email'] = email 
 
-    new_creds = OAuthCredentials(
-        token=credentials.token,
-        refresh_token=credentials.refresh_token,
-        token_uri=credentials.token_uri,
-        client_id=credentials.client_id,
-        client_secret=credentials.client_secret,
-        scopes=",".join(credentials.scopes)
-    )
-    db.session.add(new_creds)
-    db.session.commit()
+    # # Save the new credentials to the database
+    # existing_creds = OAuthCredentials.query.first()
+    # if existing_creds:
+    #     db.session.delete(existing_creds) 
 
-    return redirect(url_for('summarize_emails')) 
+    # new_creds = OAuthCredentials(
+    #     token=credentials.token,
+    #     refresh_token=credentials.refresh_token,
+    #     token_uri=credentials.token_uri,
+    #     client_id=credentials.client_id,
+    #     client_secret=credentials.client_secret,
+    #     scopes=",".join(credentials.scopes)
+    # )
+    # db.session.add(new_creds)
+    # db.session.commit()
+
+    # # if 'otp_verified'  not in session:
+    # #     return redirect(url_for('setup_otp'))
+
+    # return redirect(url_for('summarize_emails')) 
+    try:
+        flow.fetch_token(authorization_response=request.url)
+        credentials = flow.credentials
+
+        # Store credentials in session
+        session['credentials'] = {
+            'token': credentials.token,
+            'refresh_token': credentials.refresh_token,
+            'token_uri': credentials.token_uri,
+            'client_id': credentials.client_id,
+            'client_secret': credentials.client_secret,
+            'scopes': credentials.scopes
+        }
+
+        return redirect(url_for('summarize_emails'))
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to authenticate: {str(e)}"}), 500
+
 
 @app.route('/summarize_emails', methods=['GET'])
 def summarize_emails():
@@ -116,55 +193,60 @@ def summarize_emails():
     service = build('gmail', 'v1', credentials=credentials)
 
     try:
-        results = service.users().messages().list(userId='me', labelIds=['INBOX'], maxResults=5).execute()
+        # Fetch emails (Gmail API automatically orders by the newest emails first)
+        results = service.users().messages().list(
+            userId='me', labelIds=['INBOX', 'CATEGORY_PERSONAL']
+        ).execute()  # No maxResults set to fetch all emails
+        messages = results.get('messages', [])
+
+        # Debugging: Log the message IDs to check their order
+        print(f"Fetched message IDs: {[msg['id'] for msg in messages]}")
+
     except Exception as e:
         return jsonify({"error": f"Failed to fetch emails: {str(e)}"}), 500
 
-    messages = results.get('messages', [])
     summaries = []
 
-    # Loop through the messages and summarize the email body
+    # Iterate over the fetched messages
     for message in messages:
         try:
             msg = service.users().messages().get(userId='me', id=message['id']).execute()
             payload = msg.get('payload', {})
             headers = payload.get('headers', [])
-            body = payload.get('body', {}).get('data', '')
+            parts = payload.get('parts', [])
+            body = ""
 
-            # Extract subject from headers
-            subject = next((header['value'] for header in headers if header['name'] == 'Subject'), 'No Subject')
+            # Safely extract the subject
+            subject = 'No Subject'  # Default value if subject is missing
+            for header in headers:
+                if header['name'] == 'Subject':
+                    subject = header['value']
+                    break
 
-            # Decode the body content (if base64 encoded)
-            if body:
-                decoded_body = base64.urlsafe_b64decode(body.encode('UTF-8')).decode('UTF-8', errors='ignore')
-            else:
-                decoded_body = "(No content available)"
-            
-            # Debugging: Check if the decoded body contains meaningful content
-            print(f"Decoded body for email '{subject}': {decoded_body[:100]}...")  # Print the first 100 characters of the body
+            # Extract body content from parts if available
+            for part in parts:
+                if part.get('mimeType') == 'text/plain' and 'data' in part['body']:
+                    body = base64.urlsafe_b64decode(part['body']['data']).decode('UTF-8', errors='ignore')
+                    break
+
+            # Debugging: Check extracted body
+            print(f"Decoded body for email '{subject}': {body[:100]}...")  # Print first 100 chars of body
 
         except Exception as e:
-            decoded_body = f"(Unable to decode email body: {str(e)})"
-        
-        # Check if decoded_body has meaningful content and summarize it
-        if decoded_body and decoded_body != "(No content available)" and decoded_body != "(Unable to decode email body)":
+            body = f"(Unable to decode email body: {str(e)})"
+
+        if body:
             try:
-                # Debugging: Check if the body passed to the summarizer is valid
-                print(f"Summarizing body: {decoded_body[:100]}...")  # Print the first 100 characters passed to summarizer
-                summary = summarizer(decoded_body, max_length=100, min_length=30, do_sample=False)
+                print(f"Summarizing body: {body[:100]}...")  # Check first 100 chars before summarizing
+                # Summarize to about 50 words (you can adjust the lengths here)
+                summary = summarizer(body, max_length=150, min_length=30, do_sample=False)  # Adjusted for length
                 summaries.append({"subject": subject, "summary": summary[0]['summary_text']})
             except Exception as e:
                 summaries.append({"subject": subject, "summary": f"(Error summarizing email body: {str(e)})"})
         else:
             summaries.append({"subject": subject, "summary": "(No summary available)"})
 
-        # Extract attachments if present
-        attachments = extract_attachments(payload)
-        if attachments:
-            summaries[-1]["attachments"] = attachments
-
-    # Render the email summaries in the HTML template
-    return render_template('summarized_emails.html', summaries=summaries)
+    return render_template('summarized_emails.html', summaries=summaries)   
 
 def decode_body(payload):
     # Check if body is base64 encoded
