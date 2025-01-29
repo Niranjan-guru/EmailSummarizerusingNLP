@@ -31,7 +31,7 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY', 'default_secret_key')
 # mail = Mail(app)
 
 # Use environment variable for client secret file
-CLIENT_SECRET_FILE = os.getenv('GOOGLE_CLIENT_SECRET_FILE', r'C:\Users\LENOVO\OneDrive\Documents\Email-Summarizer-Extension\client_secret_817174760885-qkhtkn8ib3uhobfj5ipf34pi60k8pikv.apps.googleusercontent.com.json')
+CLIENT_SECRET_FILE = os.getenv('GOOGLE_CLIENT_SECRET_FILE', r'your-own-client_secret.json')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///credentials.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
