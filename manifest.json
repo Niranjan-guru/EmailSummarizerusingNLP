@@ -1,0 +1,30 @@
+{
+    "manifest_version": 3,
+    "name": "OptiMailPro",
+    "version": "1.0",
+    "description": "Summarize and segregate email using NLP",
+    "permissions": ["activeTab", "scripting", "storage", "identity"],
+    "host_permissions": ["https://mail.google.com/*"],
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    },
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "content_scripts": [
+        {
+            "matches": ["https://mail.google.com/*"],
+            "js": ["content.js"]
+        }
+    ],
+    "externally_connectable": {
+        "matches": ["http://127.0.0.1:5000/*"]
+    },
+    "web_accessible_resources": [
+        {
+            "resources": ["content.js"],
+            "matches": ["https://mail.google.com/*"]
+        }
+    ]
+}
