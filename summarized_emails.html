@@ -1,53 +1,165 @@
-<!-- Create a folder named "templates" and move this html file into it -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email Summaries</title>
+    <link rel="icon" type="img/jpg" href="static/logo.jpg">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/inter-ui/3.19.3/inter.css" rel="stylesheet">
     <style>
+           body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        padding: 40px 20px;
+        margin: 0;
+        min-height: 100vh;
+        color: #1e293b;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    h1 {
+        text-align: center;
+        color: white;
+        font-size: 3rem;
+        margin-bottom: 2rem;
+        font-weight: 700;
+        text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+        animation: fadeInDown 1s ease-in-out;
+    }
+
+    .email-summary {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        padding: 25px;
+        margin: 20px 0;
+        border-radius: 16px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        animation: fadeInUp 0.8s ease-in-out;
+    }
+
+    .email-summary:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .email-subject {
+        margin: 0 0 15px 0;
+        padding-bottom: 15px;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+    }
+
+    .email-subject:before {
+        content: "📩";
+        margin-right: 10px;
+        font-size: 1.5em;
+    }
+
+    .summary-text {
+        font-size: 1.1rem;
+        line-height: 1.7;
+        color: #fff;
+        margin: 0;
+        opacity: 0.9;
+    }
+
+    .error-message {
+        color: #ff5757;
+        background-color: rgba(255, 87, 87, 0.2);
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .error-message:before {
+        content: "⚠️";
+        margin-right: 8px;
+    }
+
+    .no-summaries {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        color: white;
+        font-size: 1.2rem;
+        backdrop-filter: blur(8px);
+    }
+
+    /* Smooth Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 768px) {
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
+            padding: 20px 15px;
         }
-        .container {
-            width: 80%;
-            margin: 20px auto;
-        }
+
         h1 {
-            text-align: center;
-            color: #333;
+            font-size: 2.5rem;
         }
+
         .email-summary {
-            background-color: #ffffff;
             padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
-        .email-summary h3 {
-            color: #333;
-        }
-        .email-summary p {
-            font-size: 14px;
-            color: #555;
-        }
+    }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Email Summaries</h1>
+
         {% if summaries %}
-            {% for summary in summaries %}
+            {% for email in summaries %}
                 <div class="email-summary">
-                    <h3>Subject: {{ summary.subject }}</h3>
-                    <p><strong>Summary:</strong> {{ summary.summary }}</p>
+                    <h2 class="email-subject">{{ email.subject }}</h2>
+                    <p class="summary-text">
+                        {% if email.summary %}
+                            {{ email.summary }}
+                        {% else %}
+                            <span class="error-message">No summary available or error processing email.</span>
+                        {% endif %}
+                    </p>
                 </div>
             {% endfor %}
         {% else %}
-            <p>No summaries available.</p>
+            <div class="no-summaries">
+                No email summaries found. Please ensure you have connected your Google account.
+            </div>
         {% endif %}
     </div>
 </body>
