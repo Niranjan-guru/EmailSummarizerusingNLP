@@ -1,0 +1,300 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Summarizer</title>
+    <style>
+        body {
+            font-family: Dejavu Sans, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: black;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            padding: 40px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.8); 
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            position: relative; 
+        }
+
+        
+        .logo {
+            position: absolute;
+            top: 20px;  
+            left: 20px; 
+            width: 50px;
+            height: auto;
+        }
+
+        
+        h3 {
+            font-size: 2.5em;
+            color: black;
+            margin-bottom: 20px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+      
+        p {
+            font-size: 1.2em;
+            color: black;
+            margin-bottom: 40px;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        
+        button {
+            background-color: black;
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            width: 100%;
+            font-size: 1.3em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        button:hover {
+            background-color: #333;
+            transform: translateY(-4px);
+        }
+
+        button:active {
+            background-color: #222;
+            transform: translateY(4px);
+        }
+
+        
+        @media (max-width: 600px) {
+            .container {
+                width: 90%;
+                padding: 25px;
+            }
+
+            button {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <img src="logo.jpeg" alt="Logo" class="logo"> 
+
+        <h3>Email Summarizer</h3>
+        <p>Click the button below to quickly summarize your emails and save time.</p>
+        <button id="scanEmails">Summarize Emails</button>
+        
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OptiMailPro - Smart Email Summarization</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/inter-ui/3.19.3/inter.css" rel="stylesheet">
+    <style>
+       body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #dbeafe, #f0f4f8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #1e293b;
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+.container {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(12px);
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    max-width: 480px;
+    width: 90%;
+    text-align: center;
+    position: relative;
+    animation: fadeInUp 1s ease-in-out;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeIn 1s ease-in-out forwards;
+}
+
+.logo {
+    width: 50px;
+    height: 50px;
+    margin-right: 12px;
+    border-radius: 50%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #0f172a;
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    text-shadow: 1px 1px 10px rgba(0, 0, 0, 0.05);
+}
+
+.tagline {
+    color: #475569;
+    font-size: 1.1rem;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeIn 1.2s ease-in-out forwards;
+}
+
+.features {
+    text-align: left;
+    margin: 24px 0;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    animation: fadeIn 1.3s ease-in-out forwards;
+}
+
+.features h2 {
+    font-size: 1.2rem;
+    color: #0f172a;
+    margin-bottom: 16px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    color: #475569;
+}
+
+.feature-item:before {
+    content: "✓";
+    color: #2563eb;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.login-btn {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease-in-out;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.15);
+    transform: scale(1);
+    opacity: 0;
+    animation: fadeInUp 1.5s ease-in-out forwards;
+}
+
+.login-btn:hover {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    transform: scale(1.05);
+    box-shadow: 0 6px 15px rgba(37, 99, 235, 0.2);
+}
+
+.login-btn:active {
+    transform: scale(1);
+}
+
+.login-btn img {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+}
+
+/* Keyframe Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 24px;
+    }
+
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    .logo {
+        width: 40px;
+        height: 40px;
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='logo.jpg') }}" alt="OptiMailPro Logo" class="logo">
+            <h1>OptiMailPro</h1>
+        </div>
+        
+        <p class="tagline">Streamline your inbox with AI-powered email summaries</p>
+
+        <div class="features">
+            <h2>Why Choose OptiMailPro?</h2>
+            <div class="feature-item">Save time with smart email summarization</div>
+            <div class="feature-item">Focus on what matters most</div>
+            <div class="feature-item">Secure and privacy-focused</div>
+            <div class="feature-item">Seamless Gmail integration</div>
+        </div>
+
+        <a href="/login" class="login-btn">
+            <img src="{{ url_for('static', filename='google-icon.jpeg') }}" alt="Google Icon">
+            Sign in with Google
+        </a>
+    </div>
+</body>
+</html>
