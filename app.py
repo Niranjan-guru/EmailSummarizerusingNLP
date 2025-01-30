@@ -27,11 +27,10 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY', 'default_secret_key')
 # app.config['MAIL_USE_TLS'] = True
 # app.config['MAIL_USERNAME'] = os.getenv('EMAIL_USER', 'your-email@gmail.com')
 # app.config['MAIL_PASSWORD'] = os.getenv('EMAIL_PASS', 'your-email-password')
-
 # mail = Mail(app)
 
 # Use environment variable for client secret file
-CLIENT_SECRET_FILE = os.getenv('GOOGLE_CLIENT_SECRET_FILE', r'your-own-client_secret.json')
+CLIENT_SECRET_FILE = os.getenv('GOOGLE_CLIENT_SECRET_FILE', r'C:\Users\LENOVO\OneDrive\Documents\Email-Summarizer-Extension\client_secret_817174760885-qkhtkn8ib3uhobfj5ipf34pi60k8pikv.apps.googleusercontent.com.json')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///credentials.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -280,7 +279,7 @@ def decode_body(payload):
 
 @app.route('/')
 def home():
-    return "Welcome to the Gmail Summarizer! <a href='/login'>Login with Google</a>"
+    return render_template("index.html")
 
 # Function to extract attachments from email
 def extract_attachments(payload):
